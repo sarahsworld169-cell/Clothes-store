@@ -1,5 +1,6 @@
 const express = require("express");
 const { Pool } = require("pg");
+const authenticate = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -14,21 +15,29 @@ const pool = new Pool({
    CREATE ORDER
 ========================= */
 
-router.post("/", async (req, res) => {
+router.post("/", authenticate, async (req, res) => {
   const client = await pool.connect();
 
   try {
     const {
-      user_id,
       items,
       payment_method,
       delivery_address
     } = req.body;
 
-    if (!user_id || !items || !items.length || !delivery_address) {
+    const user_id = req.user.id;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Missing order information."
+        message: "Your cart is empty."
+      });
+    }
+
+    if (!delivery_address) {
+      return res.status(400).json({
+        success: false,
+        message: "Delivery address is required."
       });
     }
 
@@ -37,12 +46,16 @@ router.post("/", async (req, res) => {
     let totalAmount = 0;
     const orderItems = [];
 
-    /* Check products and calculate total */
-
     for (const item of items) {
+      if (!item.product_id || !item.quantity || item.quantity < 1) {
+        throw new Error("Invalid product or quantity.");
+      }
 
       const productResult = await client.query(
-        "SELECT id, price, stock FROM products WHERE id = $1",
+        `SELECT id, price, stock
+         FROM products
+         WHERE id = $1
+         FOR UPDATE`,
         [item.product_id]
       );
 
@@ -67,8 +80,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    /* Create order */
-
     const orderResult = await client.query(
       `INSERT INTO orders
        (user_id, total_amount, payment_method, delivery_address)
@@ -86,10 +97,7 @@ router.post("/", async (req, res) => {
 
     const order = orderResult.rows[0];
 
-    /* Add order items + reduce stock */
-
     for (const item of orderItems) {
-
       await client.query(
         `INSERT INTO order_items
          (order_id, product_id, quantity, price)
@@ -118,11 +126,10 @@ router.post("/", async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Order created successfully.",
-      order: order
+      order
     });
 
   } catch (error) {
-
     await client.query("ROLLBACK");
 
     console.error(error);
@@ -133,27 +140,23 @@ router.post("/", async (req, res) => {
     });
 
   } finally {
-
     client.release();
-
   }
 });
 
 
 /* =========================
-   GET USER ORDERS
+   GET MY ORDERS
 ========================= */
 
-router.get("/user/:userId", async (req, res) => {
-
+router.get("/my-orders", authenticate, async (req, res) => {
   try {
-
     const result = await pool.query(
       `SELECT *
        FROM orders
        WHERE user_id = $1
        ORDER BY created_at DESC`,
-      [req.params.userId]
+      [req.user.id]
     );
 
     res.json({
@@ -162,16 +165,13 @@ router.get("/user/:userId", async (req, res) => {
     });
 
   } catch (error) {
-
     console.error(error);
 
     res.status(500).json({
       success: false,
-      message: "Could not load orders."
+      message: "Could not load your orders."
     });
-
   }
-
 });
 
 
