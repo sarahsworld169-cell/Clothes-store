@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sarah's World | Clothing Store</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f7f7f7;
+      color: #111;
+    }
+
+    /* NAVBAR */
+    nav {
+      background: #111;
+      color: white;
+      padding: 18px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav h1 {
+      font-size: 24px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 18px;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 430px;
+      padding: 80px 7%;
+      display: flex;
+      align-items: center;
+      background: #e9e9e9;
+    }
+
+    .hero-text {
+      max-width: 600px;
+    }
+
+    .hero h2 {
+      font-size: 50px;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      margin-bottom: 25px;
+      color: #555;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #111;
+      color: white;
+      padding: 14px 25px;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+
+    /* PRODUCTS */
+    .products {
+      padding: 60px 7%;
+    }
+
+    .products h2,
+    .cart-section h2,
+    .checkout h2,
+    .payment h2,
+    .contact h2 {
+      text-align: center;
+      margin-bottom: 35px;
+      font-size: 32px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+    }
+
+    .product {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    }
+
+    .product img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+    }
+
+    .product-info {
+      padding: 18px;
+    }
+
+    .product-info h3 {
+      margin-bottom: 8px;
+    }
+
+    .price {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .buy-btn {
+      width: 100%;
+      border: none;
+      background: #111;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .buy-btn:hover {
+      opacity: 0.85;
+    }
+
+    /* CART */
+    .cart-section {
+      background: #fff;
+      padding: 60px 7%;
+    }
+
+    .cart-container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .cart-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .cart-info {
+      flex: 1;
+    }
+
+    .cart-info h3 {
+      margin-bottom: 6px;
+    }
+
+    .quantity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .quantity button {
+      border: none;
+      background: #111;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .remove-btn {
+      border: none;
+      background: #d00;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .cart-total {
+      text-align: right;
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 25px;
+    }
+
+    .checkout-btn {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background: #111;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .empty-cart {
+      text-align: center;
+      color: #666;
+      padding: 20px;
+    }
+
+    /* CHECKOUT */
+    .checkout {
+      padding: 60px 7%;
+    }
+
+    .checkout-container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+    }
+
+    .checkout input,
+    .checkout textarea,
+    .checkout select {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    .checkout textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .place-order {
+      width: 100%;
+      padding: 14px;
+      background: #111;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    /* PAYMENT */
+    .payment {
+      background: white;
+      padding: 50px 7%;
+      text-align: center;
+    }
+
+    .payment p {
+      margin: 8px 0;
+      font-size: 17px;
+    }
+
+    .payment-number {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    /* CONTACT */
+    .contact {
+      padding: 50px 7%;
+      text-align: center;
+    }
+
+    .contact p {
+      margin: 10px 0;
+      font-size: 17px;
+    }
+
+    .contact a {
+      color: #111;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    /* FOOTER */
+    footer {
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 25px;
+    }
+
+    /* MOBILE */
+    @media (max-width: 600px) {
+
+      nav {
+        padding: 16px 5%;
+      }
+
+      nav h1 {
+        font-size: 20px;
+      }
+
+      nav a {
+        margin-left: 7px;
+        font-size: 12px;
+      }
+
+      .hero {
+        padding: 60px 5%;
+      }
+
+      .hero h2 {
+        font-size: 36px;
+      }
+
+      .products,
+      .cart-section,
+      .checkout {
+        padding: 50px 5%;
+      }
+
+      .cart-item {
+        align-items: flex-start;
+      }
+
+      .cart-item img {
+        width: 65px;
+        height: 65px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <h1>Sarah's World</h1>
+
+    <div>
+      <a href="#">Home</a>
+      <a href="#products">Shop</a>
+      <a href="#cart">Cart 🛒 (<span id="cart-count">0</span>)</a>
+    </div>
+  </nav>
+
+
+  <!-- HERO -->
+  <section class="hero">
+
+    <div class="hero-text">
+
+      <h2>Style That Fits You.</h2>
+
+      <p>
+        Welcome to Sarah's World — discover our latest clothing collection.
+      </p>
+
+      <a href="#products" class="btn">
+        Shop Now
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <!-- PRODUCTS -->
+  <section class="products" id="products">
+
+    <h2>Latest Collection</h2>
+
+    <div class="product-grid">
+
+
+      <!-- PRODUCT 1 -->
+      <div class="product">
+
+        <img
+          src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80"
+          alt="Classic T-Shirt"
+        >
+
+        <div class="product-info">
+
+          <h3>Classic T-Shirt</h3>
+
+          <div class="price">
+            ৳599
+          </div>
+
+          <button
+            class="buy-btn"
+            onclick="addToCart('Classic T-Shirt', 599, this)"
+          >
+            Add to Cart
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- PRODUCT 2 -->
+      <div class="product">
+
+        <img
+          src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=600&q=80"
+          alt="Premium Hoodie"
+        >
+
+        <div class="product-info">
+
+          <h3>Premium Hoodie</h3>
+
+          <div class="price">
+            ৳1299
+          </div>
+
+          <button
+            class="buy-btn"
+            onclick="addToCart('Premium Hoodie', 1299, this)"
+          >
+            Add to Cart
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- PRODUCT 3 -->
+      <div class="product">
+
+        <img
+          src="https://images.unsplash.com/photo-1610652492500-ded49ceeb378?auto=format&fit=crop&w=600&q=80"
+          alt="Casual Shirt"
+        >
+
+        <div class="product-info">
+
+          <h3>Casual Shirt</h3>
+
+          <div class="price">
+            ৳899
+          </div>
+
+          <button
+            class="buy-btn"
+            onclick="addToCart('Casual Shirt', 899, this)"
+          >
+            Add to Cart
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- PRODUCT 4 -->
+      <div class="product">
+
+        <img
+          src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80"
+          alt="Street Jacket"
+        >
+
+        <div class="product-info">
+
+          <h3>Street Jacket</h3>
+
+          <div class="price">
+            ৳1799
+          </div>
+
+          <button
+            class="buy-btn"
+            onclick="addToCart('Street Jacket', 1799, this)"
+          >
+            Add to Cart
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- CART -->
+  <section class="cart-section" id="cart">
+
+    <h2>Your Cart 🛒</h2>
+
+    <div class="cart-container">
+
+      <div id="cart-items">
+        <div class="empty-cart">
+          Your cart is empty.
+        </div>
+      </div>
+
+      <div class="cart-total">
+        Total: ৳<span id="cart-total">0</span>
+      </div>
+
+      <button
+        class="checkout-btn"
+        onclick="goToCheckout()"
+      >
+        Proceed to Checkout
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- CHECKOUT -->
+  <section class="checkout" id="checkout">
+
+    <h2>Checkout 📦</h2>
+
+    <div class="checkout-container">
+
+      <input
+        type="text"
+        id="customer-name"
+        placeholder="Your Name"
+      >
+
+      <input
+        type="tel"
+        id="customer-phone"
+        placeholder="Phone Number"
+      >
+
+      <textarea
+        id="customer-address"
+        placeholder="Delivery Address"
+      ></textarea>
+
+      <select id="payment-method">
+
+        <option value="">
+          Select Payment Method
+        </option>
+
+        <option value="bKash">
+          bKash
+        </option>
+
+        <option value="Nagad">
+          Nagad
+        </option>
+
+      </select>
+
+      <button
+        class="place-order"
+        onclick="placeOrder()"
+      >
+        Place Order
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- PAYMENT -->
+  <section class="payment" id="payment">
+
+    <h2>Payment Methods</h2>
+
+    <p>💳 <strong>bKash</strong></p>
+    <p>💳 <strong>Nagad</strong></p>
+
+    <div class="payment-number">
+      01723679299
+    </div>
+
+    <p>
+      Payment number for both bKash and Nagad.
+    </p>
+
+  </section>
+
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+
+    <h2>Contact Us</h2>
+
+    <p>
+      📞 Phone:
+      <a href="tel:01723679299">
+        01723679299
+      </a>
+    </p>
+
+    <p>
+      📧 Email:
+      <a href="mailto:mone6125@gmail.com">
+        mone6125@gmail.com
+      </a>
+    </p>
+
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer>
+
+    <p>
+      © 2026 Sarah's World. All rights reserved.
+    </p>
+
+  </footer>
+
+
+  <!-- JAVASCRIPT -->
+  <script>
+
+    let cart = [];
+
+
+    /* ADD TO CART */
+    function addToCart(name, price, button) {
+
+      const product = button.closest(".product");
+      const image = product.querySelector("img").src;
+
+      const existingProduct = cart.find(
+        item => item.name === name
+      );
+
+      if (existingProduct) {
+
+        existingProduct.quantity++;
+
+      } else {
+
+        cart.push({
+          name: name,
+          price: price,
+          image: image,
+          quantity: 1
+        });
+
+      }
+
+      updateCart();
+
+      document
+        .getElementById("cart")
+        .scrollIntoView({
+          behavior: "smooth"
+        });
+    }
+
+
+    /* UPDATE CART */
+    function updateCart() {
+
+      const cartItems =
+        document.getElementById("cart-items");
+
+      const cartCount =
+        document.getElementById("cart-count");
+
+      const cartTotal =
+        document.getElementById("cart-total");
+
+
+      cartItems.innerHTML = "";
+
+
+      if (cart.length === 0) {
+
+        cartItems.innerHTML = `
+          <div class="empty-cart">
+            Your cart is empty.
+          </div>
+        `;
+
+        cartCount.innerText = "0";
+        cartTotal.innerText = "0";
+
+        return;
+      }
+
+
+      let total = 0;
+      let items = 0;
+
+
+      cart.forEach((item, index) => {
+
+        total += item.price * item.quantity;
+        items += item.quantity;
+
+
+        const cartItem =
+          document.createElement("div");
+
+        cartItem.className = "cart-item";
+
+
+        cartItem.innerHTML = `
+
+          <img
+            src="${item.image}"
+            alt="${item.name}"
+          >
+
+          <div class="cart-info">
+
+            <h3>${item.name}</h3>
+
+            <p>৳${item.price}</p>
+
+            <div class="quantity">
+
+              <button
+                onclick="changeQuantity(${index}, -1)"
+              >
+                −
+              </button>
+
+              <span>
+                ${item.quantity}
+              </span>
+
+              <button
+                onclick="changeQuantity(${index}, 1)"
+              >
+                +
+              </button>
+
+            </div>
+
+          </div>
+
+          <button
+            class="remove-btn"
+            onclick="removeFromCart(${index})"
+          >
+            Remove
+          </button>
+
+        `;
+
+
+        cartItems.appendChild(cartItem);
+
+      });
+
+
+      cartCount.innerText = items;
+      cartTotal.innerText = total;
+    }
+
+
+    /* CHANGE QUANTITY */
+    function changeQuantity(index, amount) {
+
+      cart[index].quantity += amount;
+
+
+      if (cart[index].quantity <= 0) {
+
+        cart.splice(index, 1);
+
+      }
+
+
+      updateCart();
+    }
+
+
+    /* REMOVE PRODUCT */
+    function removeFromCart(index) {
+
+      cart.splice(index, 1);
+
+      updateCart();
+    }
+
+
+    /* CHECKOUT */
+    function goToCheckout() {
+
+      if (cart.length === 0) {
+
+        alert("Your cart is empty!");
+
+        return;
+      }
+
+
+      document
+        .getElementById("checkout")
+        .scrollIntoView({
+          behavior: "smooth"
+        });
+    }
+
+
+    /* PLACE ORDER */
+    function placeOrder() {
+
+      if (cart.length === 0) {
+
+        alert("Your cart is empty!");
+
+        return;
+      }
+
+
+      const name =
+        document
+          .getElementById("customer-name")
+          .value.trim();
+
+
+      const phone =
+        document
+          .getElementById("customer-phone")
+          .value.trim();
+
+
+      const address =
+        document
+          .getElementById("customer-address")
+          .value.trim();
+
+
+      const payment =
+        document
+          .getElementById("payment-method")
+          .value;
+
+
+      if (!name || !phone || !address || !payment) {
+
+        alert(
+          "Please fill in all checkout information."
+        );
+
+        return;
+      }
+
+
+      alert(
+        "Thank you, " +
+        name +
+        "! Your order has been received. Payment method: " +
+        payment
+      );
+
+
+      cart = [];
+
+      updateCart();
+
+
+      document
+        .getElementById("customer-name")
+        .value = "";
+
+
+      document
+        .getElementById("customer-phone")
+        .value = "";
+
+
+      document
+        .getElementById("customer-address")
+        .value = "";
+
+
+      document
+        .getElementById("payment-method")
+        .value = "";
+
+    }
+
+  </script>
+
+</body>
+        </html>
