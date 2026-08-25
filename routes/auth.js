@@ -52,9 +52,9 @@ router.post("/register", async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO users
-       (name, email, password_hash, phone)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, email, phone, created_at`,
+       (name, email, password_hash, phone, role)
+       VALUES ($1, $2, $3, $4, 'customer')
+       RETURNING id, name, email, phone, role, created_at`,
       [
         name.trim(),
         normalizedEmail,
@@ -68,7 +68,8 @@ router.post("/register", async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       },
       process.env.JWT_SECRET,
       {
@@ -140,7 +141,8 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       },
       process.env.JWT_SECRET,
       {
@@ -156,7 +158,8 @@ router.post("/login", async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        role: user.role
       }
     });
 
@@ -166,6 +169,58 @@ router.post("/login", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Login failed."
+    });
+  }
+});
+
+
+/* =========================
+   GET CURRENT USER
+========================= */
+
+router.get("/me", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Login required."
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    const result = await pool.query(
+      `SELECT id, name, email, phone, role, created_at
+       FROM users
+       WHERE id = $1`,
+      [decoded.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      user: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(401).json({
+      success: false,
+      message: "Invalid or expired login session."
     });
   }
 });
