@@ -2,32 +2,19 @@
 -- Sarah's World Database Schema
 -- =========================================
 
-
--- =========================================
 -- USERS
--- =========================================
-
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-
     name VARCHAR(100) NOT NULL,
-
     email VARCHAR(255) NOT NULL UNIQUE,
-
     password_hash TEXT NOT NULL,
-
     phone VARCHAR(20),
-
     role VARCHAR(20) NOT NULL DEFAULT 'customer',
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
--- =========================================
 -- PRODUCTS
--- =========================================
-
 CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
 
@@ -39,18 +26,21 @@ CREATE TABLE IF NOT EXISTS products (
 
     image_url TEXT,
 
+    video_url TEXT,
+
     category VARCHAR(100),
 
     stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+
+    sizes TEXT,
+
+    colors TEXT,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
--- =========================================
 -- ORDERS
--- =========================================
-
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
 
@@ -74,10 +64,7 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 
--- =========================================
 -- ORDER ITEMS
--- =========================================
-
 CREATE TABLE IF NOT EXISTS order_items (
     id SERIAL PRIMARY KEY,
 
