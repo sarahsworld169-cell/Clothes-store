@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Product | Sarah's World</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f7f7f7;
+      color: #111;
+    }
+
+    nav {
+      background: #111;
+      color: white;
+      padding: 18px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav h1 {
+      font-size: 24px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 18px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 50px auto;
+      padding: 0 20px;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 25px;
+      color: #111;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .product-details {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 500px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #eee;
+    }
+
+    .product-info {
+      padding: 15px 0;
+    }
+
+    .product-info h2 {
+      font-size: 36px;
+      margin-bottom: 15px;
+    }
+
+    .category {
+      color: #777;
+      margin-bottom: 18px;
+    }
+
+    .price {
+      font-size: 30px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .description {
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 25px;
+      white-space: pre-line;
+    }
+
+    .stock {
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .quantity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .quantity button {
+      width: 35px;
+      height: 35px;
+      border: none;
+      background: #111;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .quantity span {
+      min-width: 30px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .add-cart,
+    .buy-now {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .add-cart {
+      background: #111;
+      color: white;
+    }
+
+    .buy-now {
+      background: #e9e9e9;
+      color: #111;
+    }
+
+    .reviews {
+      background: white;
+      margin-top: 30px;
+      padding: 30px;
+      border-radius: 12px;
+    }
+
+    .reviews h2 {
+      margin-bottom: 20px;
+    }
+
+    .review {
+      border-bottom: 1px solid #eee;
+      padding: 15px 0;
+    }
+
+    .review:last-child {
+      border-bottom: none;
+    }
+
+    .review-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .review-rating {
+      margin-bottom: 6px;
+    }
+
+    .loading,
+    .error {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    footer {
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 25px;
+      margin-top: 50px;
+    }
+
+    @media (max-width: 700px) {
+      nav {
+        padding: 15px 5%;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      nav h1 {
+        font-size: 20px;
+      }
+
+      nav a {
+        margin-left: 8px;
+        font-size: 13px;
+      }
+
+      .product-details {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      .product-image {
+        height: 350px;
+      }
+
+      .product-info h2 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <h1>Sarah's World</h1>
+
+    <div>
+      <a href="/">Home</a>
+      <a href="/cart.html">🛒 Cart</a>
+      <a href="/login.html">Login</a>
+    </div>
+  </nav>
+
+
+  <main class="container">
+
+    <a href="/" class="back">
+      ← Back to Shop
+    </a>
+
+    <div id="productContainer">
+      <div class="loading">
+        Loading product...
+      </div>
+    </div>
+
+  </main>
+
+
+  <footer>
+    <p>
+      © 2026 Sarah's World. All rights reserved.
+    </p>
+  </footer>
+
+
+  <script>
+
+    let product = null;
+    let quantity = 1;
+
+
+    /* =========================
+       GET PRODUCT ID
+    ========================= */
+
+    const params =
+      new URLSearchParams(window.location.search);
+
+    const productId =
+      params.get("id");
+
+
+    /* =========================
+       LOAD PRODUCT
+    ========================= */
+
+    async function loadProduct() {
+
+      const container =
+        document.getElementById("productContainer");
+
+
+      if (!productId) {
+
+        showError("Product ID is missing.");
+
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+            `/api/products/${encodeURIComponent(productId)}`
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+          throw new Error(
+            data.message || "Product not found."
+          );
+        }
+
+
+        product =
+          data.product;
+
+
+        renderProduct();
+
+        loadReviews();
+
+      } catch (error) {
+
+        console.error(error);
+
+        showError(
+          error.message || "Could not load product."
+        );
+      }
+    }
+
+
+    /* =========================
+       RENDER PRODUCT
+    ========================= */
+
+    function renderProduct() {
+
+      const container =
+        document.getElementById("productContainer");
+
+
+      const image =
+        product.image_url ||
+        product.image ||
+        "https://via.placeholder.com/800x800?text=No+Image";
+
+
+      const stock =
+        Number(product.stock || 0);
+
+
+      container.innerHTML = `
+
+        <div class="product-details">
+
+          <img
+            class="product-image"
+            src="${escapeHtml(image)}"
+            alt="${escapeHtml(product.name || "Product")}"
+          >
+
+          <div class="product-info">
+
+            <h2>
+              ${escapeHtml(product.name || "Unnamed Product")}
+            </h2>
+
+            <div class="category">
+              ${escapeHtml(
+                product.category_name || "Product"
+              )}
+            </div>
+
+            <div class="price">
+              ৳${Number(
+                product.price || 0
+              ).toLocaleString()}
+            </div>
+
+            <div class="description">
+              ${escapeHtml(
+                product.description ||
+                "No description available."
+              )}
+            </div>
+
+            <div class="stock">
+              ${
+                stock > 0
+                  ? `✅ In Stock (${stock} available)`
+                  : "❌ Out of Stock"
+              }
+            </div>
+
+            ${
+              stock > 0
+                ? `
+                  <div class="quantity">
+
+                    <button onclick="changeQuantity(-1)">
+                      −
+                    </button>
+
+                    <span id="quantity">
+                      1
+                    </span>
+
+                    <button onclick="changeQuantity(1)">
+                      +
+                    </button>
+
+                  </div>
+
+                  <button
+                    class="add-cart"
+                    onclick="addToCart()"
+                  >
+                    🛒 Add to Cart
+                  </button>
+
+                  <button
+                    class="buy-now"
+                    onclick="buyNow()"
+                  >
+                    ⚡ Buy Now
+                  </button>
+                `
+                : `
+                  <button
+                    class="add-cart"
+                    disabled
+                    style="opacity:0.5;cursor:not-allowed;"
+                  >
+                    Out of Stock
+                  </button>
+                `
+            }
+
+          </div>
+
+        </div>
+
+
+        <section class="reviews">
+
+          <h2>Customer Reviews ⭐</h2>
+
+          <div id="reviewsContainer">
+            Loading reviews...
+          </div>
+
+        </section>
+      `;
+    }
+
+
+    /* =========================
+       QUANTITY
+    ========================= */
+
+    function changeQuantity(amount) {
+
+      const stock =
+        Number(product.stock || 0);
+
+
+      quantity += amount;
+
+
+      if (quantity < 1) {
+        quantity = 1;
+      }
+
+
+      if (quantity > stock) {
+        quantity = stock;
+      }
+
+
+      document.getElementById(
+        "quantity"
+      ).innerText = quantity;
+    }
+
+
+    /* =========================
+       ADD TO CART
+    ========================= */
+
+    function addToCart() {
+
+      const cart =
+        JSON.parse(
+          localStorage.getItem("cart") || "[]"
+        );
+
+
+      const existing =
+        cart.find(
+          item => String(item.product_id) === String(product.id)
+        );
+
+
+      if (existing) {
+
+        existing.quantity += quantity;
+
+      } else {
+
+        cart.push({
+
+          product_id: product.id,
+
+          name: product.name,
+
+          price: Number(product.price),
+
+          image:
+            product.image_url ||
+            product.image ||
+            "",
+
+          quantity: quantity
+
+        });
+      }
+
+
+      localStorage.setItem(
+        "cart",
+        JSON.stringify(cart)
+      );
+
+
+      alert("Product added to cart! 🛒");
+
+    }
+
+
+    /* =========================
+       BUY NOW
+    ========================= */
+
+    function buyNow() {
+
+      addToCart();
+
+      window.location.href =
+        "/cart.html";
+    }
+
+
+    /* =========================
+       LOAD REVIEWS
+    ========================= */
+
+    async function loadReviews() {
+
+      const container =
+        document.getElementById(
+          "reviewsContainer"
+        );
+
+
+      if (!container) {
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+            `/api/reviews/product/${encodeURIComponent(productId)}`
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (
+          !response.ok ||
+          !data.success ||
+          !data.reviews ||
+          data.reviews.length === 0
+        ) {
+
+          container.innerHTML = `
+            <p>
+              No reviews yet.
+            </p>
+          `;
+
+          return;
+        }
+
+
+        container.innerHTML = "";
+
+
+        data.reviews.forEach(review => {
+
+          const div =
+            document.createElement("div");
+
+
+          div.className =
+            "review";
+
+
+          div.innerHTML = `
+
+            <div class="review-name">
+              ${escapeHtml(
+                review.user_name || "Customer"
+              )}
+            </div>
+
+            <div class="review-rating">
+              ${"⭐".repeat(
+                Number(review.rating || 0)
+              )}
+            </div>
+
+            <p>
+              ${escapeHtml(
+                review.comment || ""
+              )}
+            </p>
+
+          `;
+
+
+          container.appendChild(div);
+
+        });
+
+      } catch (error) {
+
+        console.error(error);
+
+        container.innerHTML = `
+          <p>
+            Reviews could not be loaded.
+          </p>
+        `;
+      }
+    }
+
+
+    /* =========================
+       ERROR
+    ========================= */
+
+    function showError(message) {
+
+      document.getElementById(
+        "productContainer"
+      ).innerHTML = `
+
+        <div class="error">
+
+          <h2>
+            Product unavailable
+          </h2>
+
+          <p>
+            ${escapeHtml(message)}
+          </p>
+
+          <br>
+
+          <a href="/">
+            ← Back to Shop
+          </a>
+
+        </div>
+      `;
+    }
+
+
+    /* =========================
+       HTML ESCAPE
+    ========================= */
+
+    function escapeHtml(value) {
+
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+    /* =========================
+       START
+    ========================= */
+
+    loadProduct();
+
+  </script>
+
+</body>
+</html>
