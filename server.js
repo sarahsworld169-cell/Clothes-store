@@ -1,11 +1,11 @@
 const express = require("express");
 const { Pool } = require("pg");
-const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const adminProductRoutes = require("./routes/admin-products");
+const reviewRoutes = require("./routes/reviews");
 
 const app = express();
 
@@ -40,6 +40,8 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 
 app.use("/api/admin/products", adminProductRoutes);
+
+app.use("/api/reviews", reviewRoutes);
 
 /* =========================
    HEALTH CHECK
@@ -77,7 +79,7 @@ app.get("/", (req, res) => {
 });
 
 /* =========================
-   404
+   404 HANDLER
 ========================= */
 
 app.use((req, res) => {
