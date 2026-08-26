@@ -9,6 +9,7 @@ const reviewRoutes = require("./routes/reviews");
 const adminSettingsRoutes = require("./routes/admin-settings");
 const adminOrderRoutes = require("./routes/admin-orders");
 const adminUserRoutes = require("./routes/admin-users");
+const notificationRoutes = require("./routes/notifications");
 
 const app = express();
 
@@ -42,9 +43,15 @@ app.use("/api/products", productRoutes);
 
 app.use("/api/orders", orderRoutes);
 
-app.use("/api/admin/products", adminProductRoutes);
-
 app.use("/api/reviews", reviewRoutes);
+
+app.use("/api/notifications", notificationRoutes);
+
+/* =========================
+   ADMIN ROUTES
+========================= */
+
+app.use("/api/admin/products", adminProductRoutes);
 
 app.use("/api/admin/settings", adminSettingsRoutes);
 
