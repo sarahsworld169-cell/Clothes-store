@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Checkout | Sarah's World</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f7f7f7;
+      color: #111;
+    }
+
+    nav {
+      background: #111;
+      color: white;
+      padding: 18px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav h1 {
+      font-size: 24px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 18px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 45px auto;
+      padding: 0 20px;
+    }
+
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 25px;
+    }
+
+    .box {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    .box h2 {
+      margin-bottom: 20px;
+      font-size: 22px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .payment-options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .payment-option {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 7px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .payment-option:hover {
+      border-color: #111;
+    }
+
+    .payment-option input {
+      width: auto;
+    }
+
+    .payment-option.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .order-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .order-item img {
+      width: 65px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .order-info {
+      flex: 1;
+    }
+
+    .order-info h3 {
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+
+    .order-info p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 12px 0;
+    }
+
+    .total {
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .place-order {
+      width: 100%;
+      padding: 15px;
+      background: #111;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+
+    .place-order:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 70px 20px;
+    }
+
+    .empty a {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 12px 20px;
+      background: #111;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .message.error {
+      display: block;
+      background: #ffe5e5;
+      color: #b00000;
+    }
+
+    .message.success {
+      display: block;
+      background: #e5ffe9;
+      color: #08752a;
+    }
+
+    @media (max-width: 800px) {
+      .checkout-grid {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        padding: 15px 5%;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      nav h1 {
+        font-size: 20px;
+      }
+
+      nav a {
+        margin-left: 8px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+
+    <h1>
+      Sarah's World
+    </h1>
+
+    <div>
+      <a href="/">
+        Home
+      </a>
+
+      <a href="/cart.html">
+        🛒 Cart
+      </a>
+    </div>
+
+  </nav>
+
+
+  <main class="container">
+
+    <div id="checkoutContainer">
+
+      <div class="checkout-grid">
+
+        <!-- CUSTOMER INFORMATION -->
+
+        <div>
+
+          <div class="box">
+
+            <h2>
+              Delivery Information 📦
+            </h2>
+
+            <div class="form-group">
+
+              <label for="name">
+                Full Name
+              </label>
+
+              <input
+                id="name"
+                type="text"
+                placeholder="Your full name"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="phone">
+                Phone Number
+              </label>
+
+              <input
+                id="phone"
+                type="tel"
+                placeholder="01XXXXXXXXX"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="area">
+                Delivery Area
+              </label>
+
+              <select id="area">
+
+                <option value="">
+                  Select delivery area
+                </option>
+
+                <option value="inside_dhaka">
+                  Inside Dhaka
+                </option>
+
+                <option value="outside_dhaka">
+                  Outside Dhaka
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="address">
+                Full Delivery Address
+              </label>
+
+              <textarea
+                id="address"
+                placeholder="House, road, area, district..."
+              ></textarea>
+
+            </div>
+
+          </div>
+
+
+          <!-- PAYMENT -->
+
+          <div class="box">
+
+            <h2>
+              Payment Method 💳
+            </h2>
+
+            <div
+              id="paymentOptions"
+              class="payment-options"
+            >
+
+              <label class="payment-option">
+
+                <input
+                  type="radio"
+                  name="payment"
+                  value="bkash"
+                >
+
+                <span>
+                  💳 bKash
+                </span>
+
+              </label>
+
+
+              <label class="payment-option">
+
+                <input
+                  type="radio"
+                  name="payment"
+                  value="nagad"
+                >
+
+                <span>
+                  💳 Nagad
+                </span>
+
+              </label>
+
+
+              <label class="payment-option">
+
+                <input
+                  type="radio"
+                  name="payment"
+                  value="cod"
+                >
+
+                <span>
+                  💵 Cash on Delivery
+                </span>
+
+              </label>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ORDER SUMMARY -->
+
+        <div>
+
+          <div class="box">
+
+            <h2>
+              Your Order 🛍️
+            </h2>
+
+            <div id="orderItems"></div>
+
+
+            <div class="summary-row">
+
+              <span>
+                Subtotal
+              </span>
+
+              <span>
+                ৳<span id="subtotal">0</span>
+              </span>
+
+            </div>
+
+
+            <div class="summary-row">
+
+              <span>
+                Delivery
+              </span>
+
+              <span>
+                ৳<span id="deliveryCharge">0</span>
+              </span>
+
+            </div>
+
+
+            <div class="summary-row total">
+
+              <span>
+                Total
+              </span>
+
+              <span>
+                ৳<span id="total">0</span>
+              </span>
+
+            </div>
+
+
+            <button
+              id="placeOrderBtn"
+              class="place-order"
+              onclick="placeOrder()"
+            >
+              Place Order
+            </button>
+
+
+            <div
+              id="message"
+              class="message"
+            ></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <script>
+
+    /* =========================
+       CART
+    ========================= */
+
+    let cart =
+      JSON.parse(
+        localStorage.getItem("cart") || "[]"
+      );
+
+
+    let deliveryCharge = 0;
+
+
+    /* =========================
+       LOAD CART
+    ========================= */
+
+    function loadCart() {
+
+      if (!cart.length) {
+
+        document.getElementById(
+          "checkoutContainer"
+        ).innerHTML = `
+
+          <div class="box empty">
+
+            <h2>
+              Your cart is empty 🛒
+            </h2>
+
+            <p>
+              Please add products before checkout.
+            </p>
+
+            <a href="/">
+              Continue Shopping
+            </a>
+
+          </div>
+
+        `;
+
+        return;
+      }
+
+
+      renderOrderItems();
+      calculateTotal();
+    }
+
+
+    /* =========================
+       ORDER ITEMS
+    ========================= */
+
+    function renderOrderItems() {
+
+      const container =
+        document.getElementById(
+          "orderItems"
+        );
+
+
+      container.innerHTML = "";
+
+
+      cart.forEach(item => {
+
+        const div =
+          document.createElement("div");
+
+
+        div.className =
+          "order-item";
+
+
+        div.innerHTML = `
+
+          <img
+            src="${escapeHtml(item.image || "")}"
+            alt="${escapeHtml(item.name)}"
+          >
+
+          <div class="order-info">
+
+            <h3>
+              ${escapeHtml(item.name)}
+            </h3>
+
+            <p>
+              Qty: ${Number(item.quantity)}
+            </p>
+
+            <p>
+              ৳${(
+                Number(item.price) *
+                Number(item.quantity)
+              ).toLocaleString()}
+            </p>
+
+          </div>
+
+        `;
+
+
+        container.appendChild(div);
+
+      });
+    }
+
+
+    /* =========================
+       CALCULATE TOTAL
+    ========================= */
+
+    function calculateTotal() {
+
+      let subtotal = 0;
+
+
+      cart.forEach(item => {
+
+        subtotal +=
+          Number(item.price) *
+          Number(item.quantity);
+
+      });
+
+
+      document.getElementById(
+        "subtotal"
+      ).innerText =
+        subtotal.toLocaleString();
+
+
+      document.getElementById(
+        "deliveryCharge"
+      ).innerText =
+        deliveryCharge.toLocaleString();
+
+
+      document.getElementById(
+        "total"
+      ).innerText =
+        (subtotal + deliveryCharge)
+          .toLocaleString();
+    }
+
+
+    /* =========================
+       DELIVERY AREA
+    ========================= */
+
+    document
+      .getElementById("area")
+      .addEventListener(
+        "change",
+        function () {
+
+          /*
+           * Temporary delivery charge.
+           * Later admin settings will control this.
+           */
+
+          if (
+            this.value === "inside_dhaka"
+          ) {
+
+            deliveryCharge = 60;
+
+          } else if (
+            this.value === "outside_dhaka"
+          ) {
+
+            deliveryCharge = 120;
+
+          } else {
+
+            deliveryCharge = 0;
+
+          }
+
+
+          calculateTotal();
+        }
+      );
+
+
+    /* =========================
+       PLACE ORDER
+    ========================= */
+
+    async function placeOrder() {
+
+      const name =
+        document
+          .getElementById("name")
+          .value
+          .trim();
+
+
+      const phone =
+        document
+          .getElementById("phone")
+          .value
+          .trim();
+
+
+      const area =
+        document
+          .getElementById("area")
+          .value;
+
+
+      const address =
+        document
+          .getElementById("address")
+          .value
+          .trim();
+
+
+      const paymentElement =
+        document.querySelector(
+          'input[name="payment"]:checked'
+        );
+
+
+      const button =
+        document.getElementById(
+          "placeOrderBtn"
+        );
+
+
+      if (
+        !name ||
+        !phone ||
+        !area ||
+        !address ||
+        !paymentElement
+      ) {
+
+        showMessage(
+          "Please complete all checkout information.",
+          "error"
+        );
+
+        return;
+      }
+
+
+      const paymentMethod =
+        paymentElement.value;
+
+
+      const subtotal =
+        cart.reduce(
+          (sum, item) =>
+            sum +
+            Number(item.price) *
+            Number(item.quantity),
+          0
+        );
+
+
+      const total =
+        subtotal +
+        deliveryCharge;
+
+
+      const orderItems =
+        cart.map(item => ({
+
+          product_id:
+            item.product_id,
+
+          quantity:
+            Number(item.quantity),
+
+          price:
+            Number(item.price)
+
+        }));
+
+
+      button.disabled = true;
+
+      button.innerText =
+        "Placing Order...";
+
+
+      try {
+
+        /*
+         * Authentication will be connected
+         * here after login system is ready.
+         */
+
+        const response =
+          await fetch(
+            "/api/orders",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+
+                customer_name:
+                  name,
+
+                customer_phone:
+                  phone,
+
+                delivery_area:
+                  area,
+
+                delivery_address:
+                  address,
+
+                payment_method:
+                  paymentMethod,
+
+                items:
+                  orderItems,
+
+                subtotal:
+                  subtotal,
+
+                delivery_charge:
+                  deliveryCharge,
+
+                total_amount:
+                  total
+
+              })
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+          throw new Error(
+            data.message ||
+            "Could not place order."
+          );
+        }
+
+
+        localStorage.removeItem("cart");
+
+        showMessage(
+          "Order placed successfully! 🎉",
+          "success"
+        );
+
+
+        setTimeout(() => {
+
+          window.location.href =
+            "/";
+
+        }, 1500);
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          error.message ||
+          "Could not place order.",
+          "error"
+        );
+
+
+        button.disabled = false;
+
+        button.innerText =
+          "Place Order";
+      }
+    }
+
+
+    /* =========================
+       MESSAGE
+    ========================= */
+
+    function showMessage(
+      text,
+      type
+    ) {
+
+      const message =
+        document.getElementById(
+          "message"
+        );
+
+
+      message.className =
+        "message " + type;
+
+
+      message.innerText =
+        text;
+    }
+
+
+    /* =========================
+       HTML ESCAPE
+    ========================= */
+
+    function escapeHtml(value) {
+
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+    /* =========================
+       START
+    ========================= */
+
+    loadCart();
+
+  </script>
+
+</body>
+  </html>
