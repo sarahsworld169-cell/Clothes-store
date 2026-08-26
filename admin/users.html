@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Users | Sarah's World Admin</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f5f5f5;
+      color: #111;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 240px;
+      height: 100vh;
+      background: #111;
+      color: white;
+      padding: 25px 15px;
+    }
+
+    .sidebar h1 {
+      font-size: 22px;
+      margin-bottom: 30px;
+      padding-left: 10px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      padding: 13px 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #292929;
+    }
+
+    .logout {
+      position: absolute;
+      bottom: 25px;
+      left: 15px;
+      right: 15px;
+      width: calc(100% - 30px);
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      background: #d00000;
+      color: white;
+      cursor: pointer;
+    }
+
+    .main {
+      margin-left: 240px;
+      padding: 30px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .topbar h2 {
+      font-size: 28px;
+    }
+
+    .search {
+      width: 280px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: white;
+    }
+
+    .users-box {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .user-row:last-child {
+      border-bottom: none;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #111;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-info h3 {
+      margin-bottom: 5px;
+      font-size: 16px;
+    }
+
+    .user-info p {
+      color: #666;
+      font-size: 13px;
+      margin: 3px 0;
+    }
+
+    .user-status {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 5px 9px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .active-status {
+      background: #e7f8ed;
+      color: #16833b;
+    }
+
+    .banned-status {
+      background: #ffe8e8;
+      color: #c00000;
+    }
+
+    .menu-wrapper {
+      position: relative;
+    }
+
+    .menu-btn {
+      border: none;
+      background: #eee;
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      font-size: 21px;
+      cursor: pointer;
+    }
+
+    .menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 45px;
+      width: 150px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 7px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+      z-index: 20;
+      overflow: hidden;
+    }
+
+    .menu button {
+      width: 100%;
+      border: none;
+      background: white;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .menu button:hover {
+      background: #f5f5f5;
+    }
+
+    .ban-option {
+      color: #d00000;
+    }
+
+    .unban-option {
+      color: #16833b;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #777;
+    }
+
+    /* MODAL */
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 450px;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+    }
+
+    .modal-box h3 {
+      margin-bottom: 12px;
+    }
+
+    .modal-box p {
+      color: #666;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .modal-box textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: vertical;
+      font-size: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .modal-actions button {
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .close-btn {
+      background: #ddd;
+    }
+
+    .confirm-ban {
+      background: #d00000;
+      color: white;
+    }
+
+    @media (max-width: 700px) {
+
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        padding: 15px;
+      }
+
+      .sidebar h1 {
+        margin-bottom: 15px;
+      }
+
+      .sidebar a {
+        display: inline-block;
+        margin-right: 5px;
+      }
+
+      .logout {
+        position: static;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 20px 15px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .search {
+        width: 100%;
+      }
+
+      .user-row {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+
+    <h1>Sarah's World</h1>
+
+    <a href="index.html">
+      🏠 Dashboard
+    </a>
+
+    <a href="products.html">
+      🛍️ Products
+    </a>
+
+    <a href="orders.html">
+      📦 Orders
+    </a>
+
+    <a href="users.html" class="active">
+      👥 Users
+    </a>
+
+    <a href="settings.html">
+      ⚙️ Settings
+    </a>
+
+    <button class="logout" onclick="logout()">
+      Logout
+    </button>
+
+  </aside>
+
+
+  <main class="main">
+
+    <div class="topbar">
+
+      <h2>Users</h2>
+
+      <input
+        class="search"
+        type="search"
+        id="search"
+        placeholder="Search users..."
+        oninput="searchUsers()"
+      >
+
+    </div>
+
+
+    <div class="users-box">
+
+      <div id="users-list">
+
+        <div class="empty">
+          👥 Users will appear here after connecting the Admin Users API.
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- BAN MODAL -->
+
+  <div class="modal" id="ban-modal">
+
+    <div class="modal-box">
+
+      <h3>🚫 Ban User</h3>
+
+      <p>
+        You can provide a reason for banning this user.
+        The reason will be saved with the ban.
+      </p>
+
+      <textarea
+        id="ban-reason"
+        placeholder="Ban reason (optional)"
+      ></textarea>
+
+      <div class="modal-actions">
+
+        <button
+          class="close-btn"
+          onclick="closeBanModal()"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="confirm-ban"
+          onclick="confirmBan()"
+        >
+          Ban User
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    let users = [];
+
+    let selectedUserId = null;
+
+
+    /* =========================
+       LOAD USERS
+    ========================= */
+
+    function loadUsers() {
+
+      /*
+        Backend API will be connected here.
+
+        Example:
+
+        fetch("/api/admin/users")
+      */
+
+      renderUsers();
+
+    }
+
+
+    /* =========================
+       RENDER USERS
+    ========================= */
+
+    function renderUsers(list = users) {
+
+      const container =
+        document.getElementById("users-list");
+
+      if (list.length === 0) {
+
+        container.innerHTML = `
+          <div class="empty">
+            No users found.
+          </div>
+        `;
+
+        return;
+      }
+
+
+      container.innerHTML = "";
+
+
+      list.forEach(user => {
+
+        const row =
+          document.createElement("div");
+
+        row.className = "user-row";
+
+
+        const firstLetter =
+          (user.name || "U")
+            .charAt(0)
+            .toUpperCase();
+
+
+        const isBanned =
+          user.status === "banned";
+
+
+        row.innerHTML = `
+
+          <div class="avatar">
+            ${firstLetter}
+          </div>
+
+
+          <div class="user-info">
+
+            <h3>
+              ${user.name || "User"}
+            </h3>
+
+            <p>
+              ${user.email || "Email not available"}
+            </p>
+
+            <p>
+              User ID: ${user.id || "-"}
+            </p>
+
+            <span class="user-status ${
+              isBanned
+                ? "banned-status"
+                : "active-status"
+            }">
+
+              ${
+                isBanned
+                  ? "Banned"
+                  : "Active"
+              }
+
+            </span>
+
+          </div>
+
+
+          <div class="menu-wrapper">
+
+            <button
+              class="menu-btn"
+              onclick="toggleMenu(${user.id})"
+            >
+              ⋮
+            </button>
+
+            <div
+              class="menu"
+              id="menu-${user.id}"
+            >
+
+              ${
+                isBanned
+
+                ? `
+
+                  <button
+                    class="unban-option"
+                    onclick="unbanUser(${user.id})"
+                  >
+                    ✅ Unban User
+                  </button>
+
+                `
+
+                : `
+
+                  <button
+                    class="ban-option"
+                    onclick="openBanModal(${user.id})"
+                  >
+                    🚫 Ban User
+                  </button>
+
+                `
+              }
+
+            </div>
+
+          </div>
+
+        `;
+
+
+        container.appendChild(row);
+
+      });
+
+    }
+
+
+    /* =========================
+       THREE DOT MENU
+    ========================= */
+
+    function toggleMenu(userId) {
+
+      document
+        .querySelectorAll(".menu")
+        .forEach(menu => {
+
+          if (menu.id !== "menu-" + userId) {
+            menu.style.display = "none";
+          }
+
+        });
+
+
+      const menu =
+        document.getElementById(
+          "menu-" + userId
+        );
+
+
+      menu.style.display =
+        menu.style.display === "block"
+          ? "none"
+          : "block";
+
+    }
+
+
+    /* =========================
+       BAN MODAL
+    ========================= */
+
+    function openBanModal(userId) {
+
+      selectedUserId = userId;
+
+      document
+        .getElementById("ban-reason")
+        .value = "";
+
+      document
+        .getElementById("ban-modal")
+        .style.display = "flex";
+
+
+      closeAllMenus();
+
+    }
+
+
+    function closeBanModal() {
+
+      selectedUserId = null;
+
+      document
+        .getElementById("ban-modal")
+        .style.display = "none";
+
+    }
+
+
+    /* =========================
+       CONFIRM BAN
+    ========================= */
+
+    function confirmBan() {
+
+      if (!selectedUserId) {
+        return;
+      }
+
+
+      const reason =
+        document
+          .getElementById("ban-reason")
+          .value
+          .trim();
+
+
+      /*
+        Backend API will be connected here.
+
+        Example later:
+
+        fetch(
+          "/api/admin/users/" +
+          selectedUserId +
+          "/ban",
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              reason: reason
+            })
+          }
+        )
+      */
+
+
+      alert(
+        "User #" +
+        selectedUserId +
+        " ban API connection next step-এ add হবে."
+      );
+
+
+      closeBanModal();
+
+    }
+
+
+    /* =========================
+       UNBAN USER
+    ========================= */
+
+    function unbanUser(userId) {
+
+      /*
+        Backend API will be connected here.
+      */
+
+      alert(
+        "User #" +
+        userId +
+        " unban API connection next step-এ add হবে."
+      );
+
+
+      closeAllMenus();
+
+    }
+
+
+    /* =========================
+       SEARCH
+    ========================= */
+
+    function searchUsers() {
+
+      const search =
+        document
+          .getElementById("search")
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      const filtered =
+        users.filter(user => {
+
+          const name =
+            String(user.name || "")
+              .toLowerCase();
+
+          const email =
+            String(user.email || "")
+              .toLowerCase();
+
+          const id =
+            String(user.id || "")
+              .toLowerCase();
+
+
+          return (
+            name.includes(search) ||
+            email.includes(search) ||
+            id.includes(search)
+          );
+
+        });
+
+
+      renderUsers(filtered);
+
+    }
+
+
+    /* =========================
+       CLOSE MENUS
+    ========================= */
+
+    function closeAllMenus() {
+
+      document
+        .querySelectorAll(".menu")
+        .forEach(menu => {
+
+          menu.style.display = "none";
+
+        });
+
+    }
+
+
+    document.addEventListener(
+      "click",
+      function(event) {
+
+        if (
+          !event.target.closest(".menu-wrapper")
+        ) {
+
+          closeAllMenus();
+
+        }
+
+      }
+    );
+
+
+    /* =========================
+       LOGOUT
+    ========================= */
+
+    function logout() {
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("authToken");
+
+      window.location.href = "../index.html";
+
+    }
+
+
+    loadUsers();
+
+  </script>
+
+</body>
+</html>
