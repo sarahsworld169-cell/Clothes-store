@@ -5,6 +5,7 @@ const path = require("path");
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
+const adminProductRoutes = require("./routes/admin-products");
 
 const app = express();
 
@@ -33,8 +34,12 @@ app.use(express.urlencoded({ extended: true }));
 ========================= */
 
 app.use("/api/auth", authRoutes);
+
 app.use("/api/products", productRoutes);
+
 app.use("/api/orders", orderRoutes);
+
+app.use("/api/admin/products", adminProductRoutes);
 
 /* =========================
    HEALTH CHECK
@@ -72,9 +77,22 @@ app.get("/", (req, res) => {
 });
 
 /* =========================
+   404
+========================= */
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found."
+  });
+});
+
+/* =========================
    SERVER
 ========================= */
 
 app.listen(PORT, () => {
-  console.log(`Sarah's World server running on port ${PORT}`);
+  console.log(
+    `Sarah's World server running on port ${PORT}`
+  );
 });
