@@ -7,6 +7,7 @@ const orderRoutes = require("./routes/orders");
 const adminProductRoutes = require("./routes/admin-products");
 const reviewRoutes = require("./routes/reviews");
 const adminSettingsRoutes = require("./routes/admin-settings");
+const adminOrderRoutes = require("./routes/admin-orders");
 
 const app = express();
 
@@ -46,6 +47,8 @@ app.use("/api/reviews", reviewRoutes);
 
 app.use("/api/admin/settings", adminSettingsRoutes);
 
+app.use("/api/admin/orders", adminOrderRoutes);
+
 /* =========================
    HEALTH CHECK
 ========================= */
@@ -82,7 +85,7 @@ app.get("/", (req, res) => {
 });
 
 /* =========================
-   404 HANDLER
+   404
 ========================= */
 
 app.use((req, res) => {
