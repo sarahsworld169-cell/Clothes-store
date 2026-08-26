@@ -6,6 +6,7 @@ const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const adminProductRoutes = require("./routes/admin-products");
 const reviewRoutes = require("./routes/reviews");
+const adminSettingsRoutes = require("./routes/admin-settings");
 
 const app = express();
 
@@ -42,6 +43,8 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/admin/products", adminProductRoutes);
 
 app.use("/api/reviews", reviewRoutes);
+
+app.use("/api/admin/settings", adminSettingsRoutes);
 
 /* =========================
    HEALTH CHECK
