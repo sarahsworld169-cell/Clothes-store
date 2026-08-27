@@ -19,8 +19,6 @@
       color: #111;
     }
 
-    /* SIDEBAR */
-
     .sidebar {
       position: fixed;
       left: 0;
@@ -66,8 +64,6 @@
       cursor: pointer;
     }
 
-    /* MAIN */
-
     .main {
       margin-left: 240px;
       padding: 30px;
@@ -93,8 +89,6 @@
       cursor: pointer;
     }
 
-    /* FILTERS */
-
     .filters {
       background: white;
       padding: 20px;
@@ -111,8 +105,6 @@
       margin-right: 8px;
       margin-bottom: 8px;
     }
-
-    /* ORDER */
 
     .orders-container {
       display: flex;
@@ -146,6 +138,7 @@
       border-radius: 20px;
       font-size: 12px;
       font-weight: bold;
+      text-transform: capitalize;
     }
 
     .pending {
@@ -153,9 +146,20 @@
       color: #856404;
     }
 
-    .accepted {
+    .accepted,
+    .processing {
       background: #e7f8ed;
       color: #16833b;
+    }
+
+    .shipped {
+      background: #e7f0ff;
+      color: #2457a6;
+    }
+
+    .delivered {
+      background: #dff7ff;
+      color: #087990;
     }
 
     .cancelled {
@@ -182,8 +186,6 @@
       font-size: 13px;
       color: #666;
     }
-
-    /* PRODUCTS */
 
     .items-title {
       font-size: 16px;
@@ -224,8 +226,6 @@
       font-size: 13px;
     }
 
-    /* TOTAL */
-
     .order-total {
       text-align: right;
       border-top: 1px solid #eee;
@@ -242,17 +242,17 @@
       font-weight: bold;
     }
 
-    /* ACTIONS */
-
     .order-actions {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
       margin-top: 18px;
+      flex-wrap: wrap;
     }
 
     .accept-btn,
-    .cancel-btn {
+    .cancel-btn,
+    .status-btn {
       border: none;
       padding: 10px 17px;
       border-radius: 6px;
@@ -270,13 +270,26 @@
       color: white;
     }
 
+    .status-btn {
+      background: #111;
+      color: white;
+    }
+
+    .status-select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: white;
+    }
+
     .disabled-btn {
       background: #ccc;
       color: #666;
+      border: none;
+      padding: 10px 17px;
+      border-radius: 6px;
       cursor: not-allowed;
     }
-
-    /* EMPTY */
 
     .empty {
       background: white;
@@ -286,7 +299,21 @@
       color: #777;
     }
 
-    /* MODAL */
+    .loading {
+      background: white;
+      padding: 40px;
+      text-align: center;
+      border-radius: 10px;
+      color: #666;
+    }
+
+    .error {
+      background: #ffe8e8;
+      color: #c00000;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
 
     .modal {
       display: none;
@@ -394,7 +421,9 @@
       }
 
       .accept-btn,
-      .cancel-btn {
+      .cancel-btn,
+      .status-btn,
+      .status-select {
         flex: 1;
       }
     }
@@ -402,8 +431,6 @@
 </head>
 
 <body>
-
-  <!-- SIDEBAR -->
 
   <aside class="sidebar">
 
@@ -436,8 +463,6 @@
   </aside>
 
 
-  <!-- MAIN -->
-
   <main class="main">
 
     <div class="topbar">
@@ -454,11 +479,12 @@
     </div>
 
 
-    <!-- FILTERS -->
-
     <div class="filters">
 
-      <select id="status-filter" onchange="filterOrders()">
+      <select
+        id="status-filter"
+        onchange="filterOrders()"
+      >
 
         <option value="all">
           All Orders
@@ -470,6 +496,18 @@
 
         <option value="accepted">
           Accepted
+        </option>
+
+        <option value="processing">
+          Processing
+        </option>
+
+        <option value="shipped">
+          Shipped
+        </option>
+
+        <option value="delivered">
+          Delivered
         </option>
 
         <option value="cancelled">
@@ -488,29 +526,19 @@
     </div>
 
 
-    <!-- ORDERS -->
-
     <div
       class="orders-container"
       id="orders-container"
     >
 
-      <div class="empty">
-
-        📦
-
-        <br><br>
-
-        Orders will appear here after connecting the Admin Orders API.
-
+      <div class="loading">
+        Loading orders...
       </div>
 
     </div>
 
   </main>
 
-
-  <!-- CANCEL MODAL -->
 
   <div
     class="modal"
@@ -524,9 +552,9 @@
       </h3>
 
       <p style="margin-bottom: 12px; color: #666;">
-        You can provide a reason for cancelling this order.
-        If you leave it empty, the default cancellation reason
-        will be used.
+        Write a cancellation reason.
+        If you leave it empty, the default reason
+        from Admin Settings will be used.
       </p>
 
       <textarea
@@ -559,26 +587,145 @@
 
   <script>
 
-    let selectedOrderId = null;
+    /* =========================
+       API CONFIG
+    ========================= */
 
+    /*
+      If your Railway API uses another URL,
+      change this value.
+
+      Example:
+      https://your-project.up.railway.app
+    */
+
+    const API_BASE_URL = "";
+
+
+    let selectedOrderId = null;
     let orders = [];
+
+
+    /* =========================
+       AUTH TOKEN
+    ========================= */
+
+    function getToken() {
+
+      return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken")
+      );
+
+    }
+
+
+    /* =========================
+       API REQUEST
+    ========================= */
+
+    async function apiRequest(url, options = {}) {
+
+      const token = getToken();
+
+      const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      };
+
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+
+      const response =
+        await fetch(
+          API_BASE_URL + url,
+          {
+            ...options,
+            headers
+          }
+        );
+
+
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.message ||
+          "Something went wrong."
+        );
+
+      }
+
+
+      return data;
+
+    }
 
 
     /* =========================
        LOAD ORDERS
     ========================= */
 
-    function loadOrders() {
+    async function loadOrders() {
 
-      /*
-        Admin Orders API will be connected here.
+      const container =
+        document.getElementById("orders-container");
 
-        Example later:
 
-        fetch("/api/admin/orders")
-      */
+      container.innerHTML = `
+        <div class="loading">
+          Loading orders...
+        </div>
+      `;
 
-      renderOrders();
+
+      try {
+
+        const data =
+          await apiRequest(
+            "/api/admin/orders"
+          );
+
+
+        orders =
+          Array.isArray(data.orders)
+            ? data.orders
+            : [];
+
+
+        filterOrders();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        container.innerHTML = `
+          <div class="error">
+            ❌ ${escapeHtml(error.message)}
+            <br><br>
+            <button
+              class="refresh-btn"
+              onclick="loadOrders()"
+            >
+              Try Again
+            </button>
+          </div>
+        `;
+
+      }
 
     }
 
@@ -591,6 +738,7 @@
 
       const container =
         document.getElementById("orders-container");
+
 
       if (list.length === 0) {
 
@@ -614,7 +762,32 @@
         const card =
           document.createElement("div");
 
+
         card.className = "order-card";
+
+
+        const status =
+          order.order_status || "pending";
+
+
+        const customerName =
+          order.customer_name || "Customer";
+
+
+        const customerPhone =
+          order.customer_phone || "Not available";
+
+
+        const customerEmail =
+          order.customer_email || "Not available";
+
+
+        const area =
+          order.area_name || "Not available";
+
+
+        const address =
+          order.delivery_address || "Not available";
 
 
         card.innerHTML = `
@@ -625,8 +798,8 @@
               Order #${order.id}
             </div>
 
-            <span class="status ${order.status}">
-              ${order.status}
+            <span class="status ${escapeHtml(status)}">
+              ${escapeHtml(status)}
             </span>
 
           </div>
@@ -640,7 +813,7 @@
                 Customer
               </strong>
 
-              ${order.customer_name || "Customer"}
+              ${escapeHtml(customerName)}
 
             </div>
 
@@ -651,7 +824,18 @@
                 Phone
               </strong>
 
-              ${order.phone || "Not available"}
+              ${escapeHtml(customerPhone)}
+
+            </div>
+
+
+            <div class="info-box">
+
+              <strong>
+                Email
+              </strong>
+
+              ${escapeHtml(customerEmail)}
 
             </div>
 
@@ -662,7 +846,7 @@
                 Delivery Area
               </strong>
 
-              ${order.delivery_area || "Not available"}
+              ${escapeHtml(area)}
 
             </div>
 
@@ -670,21 +854,35 @@
             <div class="info-box">
 
               <strong>
-                Payment
+                Payment Method
               </strong>
 
-              ${order.payment_method || "Not selected"}
+              ${escapeHtml(order.payment_method || "Not selected")}
 
             </div>
 
 
-            <div class="info-box" style="grid-column: 1 / -1;">
+            <div class="info-box">
+
+              <strong>
+                Payment Status
+              </strong>
+
+              ${escapeHtml(order.payment_status || "pending")}
+
+            </div>
+
+
+            <div
+              class="info-box"
+              style="grid-column: 1 / -1;"
+            >
 
               <strong>
                 Delivery Address
               </strong>
 
-              ${order.address || "Not available"}
+              ${escapeHtml(address)}
 
             </div>
 
@@ -692,44 +890,19 @@
 
 
           <div class="items-title">
+
             <strong>
               🛍️ Products
             </strong>
+
           </div>
 
 
           <div class="items">
 
-            ${
-              (order.items || [])
-                .map(item => `
-
-                  <div class="order-item">
-
-                    <img
-                      class="item-image"
-                      src="${item.image || ""}"
-                      alt="${item.name || "Product"}"
-                    >
-
-                    <div class="item-info">
-
-                      <strong>
-                        ${item.name || "Product"}
-                      </strong>
-
-                      <span>
-                        Quantity: ${item.quantity || 1}
-                        × ৳${item.price || 0}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                `)
-                .join("")
-            }
+            <div style="color:#777; padding:10px 0;">
+              Loading product details...
+            </div>
 
           </div>
 
@@ -738,26 +911,45 @@
 
             <p>
               Subtotal:
-              ৳${order.subtotal || 0}
+              ৳${Number(order.subtotal || 0).toFixed(0)}
             </p>
 
             <p>
               Delivery Charge:
-              ৳${order.delivery_charge || 0}
+              ৳${Number(order.delivery_charge || 0).toFixed(0)}
             </p>
 
             <p class="grand-total">
               Total:
-              ৳${order.total_amount || 0}
+              ৳${Number(order.total_amount || 0).toFixed(0)}
             </p>
 
           </div>
 
 
+          ${
+            status === "cancelled" &&
+            order.cancellation_reason
+            ? `
+              <div
+                class="info-box"
+                style="margin-top:15px;"
+              >
+                <strong>
+                  Cancellation Reason
+                </strong>
+
+                ${escapeHtml(order.cancellation_reason)}
+              </div>
+            `
+            : ""
+          }
+
+
           <div class="order-actions">
 
             ${
-              order.status === "pending"
+              status === "pending"
               ? `
 
                 <button
@@ -775,16 +967,48 @@
                 </button>
 
               `
-              : `
+              : ""
+            }
 
-                <button
-                  class="disabled-btn"
-                  disabled
+
+            ${
+              status !== "cancelled" &&
+              status !== "delivered"
+              ? `
+
+                <select
+                  class="status-select"
+                  onchange="updateOrderStatus(${order.id}, this.value)"
                 >
-                  Order ${order.status}
-                </button>
+
+                  <option value="">
+                    Change Status
+                  </option>
+
+                  <option value="pending">
+                    Pending
+                  </option>
+
+                  <option value="accepted">
+                    Accepted
+                  </option>
+
+                  <option value="processing">
+                    Processing
+                  </option>
+
+                  <option value="shipped">
+                    Shipped
+                  </option>
+
+                  <option value="delivered">
+                    Delivered
+                  </option>
+
+                </select>
 
               `
+              : ""
             }
 
           </div>
@@ -794,164 +1018,116 @@
 
         container.appendChild(card);
 
+
+        loadOrderItems(
+          order.id,
+          card.querySelector(".items")
+        );
+
       });
 
     }
 
 
     /* =========================
-       FILTER
+       LOAD ORDER ITEMS
     ========================= */
 
-    function filterOrders() {
+    async function loadOrderItems(orderId, container) {
 
-      const status =
-        document
-          .getElementById("status-filter")
-          .value;
+      try {
 
-      const search =
-        document
-          .getElementById("search-order")
-          .value
-          .trim()
-          .toLowerCase();
+        const data =
+          await apiRequest(
+            `/api/admin/orders/${orderId}`
+          );
 
 
-      const filtered =
-        orders.filter(order => {
-
-          const statusMatch =
-            status === "all" ||
-            order.status === status;
-
-          const searchMatch =
-            !search ||
-            String(order.id)
-              .toLowerCase()
-              .includes(search);
-
-          return statusMatch && searchMatch;
-
-        });
+        const items =
+          data.order &&
+          Array.isArray(data.order.items)
+            ? data.order.items
+            : [];
 
 
-      renderOrders(filtered);
+        if (items.length === 0) {
 
-    }
+          container.innerHTML = `
+            <div style="color:#777; padding:10px 0;">
+              No products found.
+            </div>
+          `;
 
-
-    /* =========================
-       ACCEPT ORDER
-    ========================= */
-
-    function acceptOrder(orderId) {
-
-      /*
-        Backend API will be connected here.
-
-        Example later:
-
-        fetch("/api/admin/orders/" + orderId + "/accept", {
-          method: "PATCH"
-        })
-      */
-
-      alert(
-        "Order #" +
-        orderId +
-        " accept করার API connection next step-এ add হবে."
-      );
-
-    }
+          return;
+        }
 
 
-    /* =========================
-       CANCEL MODAL
-    ========================= */
+        container.innerHTML =
+          items
+            .map(item => {
 
-    function openCancelModal(orderId) {
-
-      selectedOrderId = orderId;
-
-      document
-        .getElementById("cancel-reason")
-        .value = "";
-
-      document
-        .getElementById("cancel-modal")
-        .style.display = "flex";
-
-    }
+              const image =
+                item.image_url ||
+                "https://via.placeholder.com/100";
 
 
-    function closeCancelModal() {
+              return `
 
-      selectedOrderId = null;
+                <div class="order-item">
 
-      document
-        .getElementById("cancel-modal")
-        .style.display = "none";
+                  <img
+                    class="item-image"
+                    src="${escapeAttribute(image)}"
+                    alt="${escapeAttribute(item.product_name || "Product")}"
+                  >
 
-    }
+                  <div class="item-info">
 
+                    <strong>
+                      ${escapeHtml(item.product_name || "Product")}
+                    </strong>
 
-    /* =========================
-       CONFIRM CANCEL
-    ========================= */
+                    <span>
+                      Quantity:
+                      ${Number(item.quantity || 0)}
+                      × ৳${Number(item.price || 0).toFixed(0)}
+                    </span>
 
-    function confirmCancel() {
+                    ${
+                      item.selected_size
+                      ? `
+                        <span>
+                          Size: ${escapeHtml(item.selected_size)}
+                        </span>
+                      `
+                      : ""
+                    }
 
-      if (!selectedOrderId) {
-        return;
-      }
+                    ${
+                      item.selected_color
+                      ? `
+                        <span>
+                          Color: ${escapeHtml(item.selected_color)}
+                        </span>
+                      `
+                      : ""
+                    }
 
+                  </div>
 
-      const reason =
-        document
-          .getElementById("cancel-reason")
-          .value
-          .trim();
+                </div>
 
+              `;
 
-      /*
-        Backend API will be connected here.
-
-        If reason is empty,
-        backend will use the default
-        cancellation reason.
-      */
-
-
-      alert(
-        "Order #" +
-        selectedOrderId +
-        " cancellation API connection next step-এ add হবে."
-      );
-
-
-      closeCancelModal();
-
-    }
-
-
-    /* =========================
-       LOGOUT
-    ========================= */
-
-    function logout() {
-
-      localStorage.removeItem("token");
-      localStorage.removeItem("authToken");
-
-      window.location.href = "../index.html";
-
-    }
+            })
+            .join("");
 
 
-    loadOrders();
+      } catch (error) {
 
-  </script>
+        console.error(error);
 
-</body>
-</html>
+        container.innerHTML = `
+          <div style="color:#c00000; padding:10px 0;">
+            Could not load products.
+          </di
