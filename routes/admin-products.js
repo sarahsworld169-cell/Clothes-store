@@ -29,7 +29,13 @@ router.post("/", adminOnly, async (req, res) => {
       stock,
       sizes,
       colors,
-      is_featured
+      is_featured,
+
+      // Payment methods
+      allow_bkash,
+      allow_nagad,
+      allow_cod
+
     } = req.body;
 
     if (!name || price === undefined) {
@@ -52,9 +58,13 @@ router.post("/", adminOnly, async (req, res) => {
          stock,
          sizes,
          colors,
-         is_featured
+         is_featured,
+         allow_bkash,
+         allow_nagad,
+         allow_cod
        )
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       VALUES
+       ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        RETURNING *`,
       [
         name.trim(),
@@ -67,7 +77,11 @@ router.post("/", adminOnly, async (req, res) => {
         stock || 0,
         sizes || null,
         colors || null,
-        is_featured || false
+        is_featured === true,
+
+        allow_bkash !== false,
+        allow_nagad !== false,
+        allow_cod !== false
       ]
     );
 
@@ -106,7 +120,13 @@ router.put("/:id", adminOnly, async (req, res) => {
       sizes,
       colors,
       is_featured,
-      is_active
+      is_active,
+
+      // Payment methods
+      allow_bkash,
+      allow_nagad,
+      allow_cod
+
     } = req.body;
 
     const result = await pool.query(
@@ -124,8 +144,15 @@ router.put("/:id", adminOnly, async (req, res) => {
          colors = $10,
          is_featured = $11,
          is_active = $12,
+
+         allow_bkash = $13,
+         allow_nagad = $14,
+         allow_cod = $15,
+
          updated_at = CURRENT_TIMESTAMP
-       WHERE id = $13
+
+       WHERE id = $16
+
        RETURNING *`,
       [
         name,
@@ -138,8 +165,13 @@ router.put("/:id", adminOnly, async (req, res) => {
         stock || 0,
         sizes || null,
         colors || null,
-        is_featured || false,
+        is_featured === true,
         is_active !== false,
+
+        allow_bkash !== false,
+        allow_nagad !== false,
+        allow_cod !== false,
+
         req.params.id
       ]
     );
