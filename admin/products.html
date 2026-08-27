@@ -127,6 +127,42 @@
       grid-column: 1 / -1;
     }
 
+    /* PAYMENT SETTINGS */
+
+    .payment-box {
+      grid-column: 1 / -1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafafa;
+    }
+
+    .payment-box h4 {
+      margin-bottom: 12px;
+    }
+
+    .payment-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .payment-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .payment-option input {
+      width: auto;
+      cursor: pointer;
+    }
+
     .save-btn {
       background: #111;
       color: white;
@@ -189,6 +225,12 @@
       color: #666;
       font-size: 14px;
       margin: 3px 0;
+    }
+
+    .payment-status {
+      font-size: 12px;
+      margin-top: 6px;
+      color: #555;
     }
 
     .status {
@@ -276,7 +318,8 @@
         grid-template-columns: 1fr;
       }
 
-      .full {
+      .full,
+      .payment-box {
         grid-column: auto;
       }
 
@@ -291,6 +334,10 @@
       .product-image {
         width: 60px;
         height: 60px;
+      }
+
+      .payment-options {
+        flex-direction: column;
       }
     }
   </style>
@@ -401,6 +448,57 @@
           placeholder="Product Description"
         ></textarea>
 
+
+        <!-- PAYMENT METHODS -->
+
+        <div class="payment-box">
+
+          <h4>💳 Payment Methods for This Product</h4>
+
+          <div class="payment-options">
+
+            <label class="payment-option">
+
+              <input
+                type="checkbox"
+                id="allow-bkash"
+                checked
+              >
+
+              <span>💳 bKash</span>
+
+            </label>
+
+
+            <label class="payment-option">
+
+              <input
+                type="checkbox"
+                id="allow-nagad"
+                checked
+              >
+
+              <span>💳 Nagad</span>
+
+            </label>
+
+
+            <label class="payment-option">
+
+              <input
+                type="checkbox"
+                id="allow-cod"
+                checked
+              >
+
+              <span>💵 Cash on Delivery</span>
+
+            </label>
+
+          </div>
+
+        </div>
+
       </div>
 
       <br>
@@ -425,7 +523,7 @@
       <div id="products-list">
 
         <div class="empty">
-          🛍️ Products will appear here after connecting the database.
+          Loading products...
         </div>
 
       </div>
@@ -437,56 +535,642 @@
 
   <script>
 
+    const API_URL = "/api/admin/products";
+
+
+    /* =========================
+       AUTH TOKEN
+    ========================= */
+
+    function getToken() {
+
+      return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken")
+      );
+
+    }
+
+
+    /* =========================
+       SHOW FORM
+    ========================= */
+
     function showForm() {
+
       document.getElementById("form-box").style.display = "block";
+
       window.scrollTo({
         top: 0,
         behavior: "smooth"
       });
+
     }
 
+
+    /* =========================
+       HIDE FORM
+    ========================= */
 
     function hideForm() {
+
       document.getElementById("form-box").style.display = "none";
+
     }
 
 
-    function saveProduct() {
+    /* =========================
+       SAVE PRODUCT
+    ========================= */
+
+    async function saveProduct() {
 
       const name =
-        document.getElementById("product-name").value.trim();
+        document
+          .getElementById("product-name")
+          .value
+          .trim();
+
 
       const price =
-        document.getElementById("product-price").value;
+        document
+          .getElementById("product-price")
+          .value;
+
 
       const stock =
-        document.getElementById("product-stock").value;
+        document
+          .getElementById("product-stock")
+          .value;
 
-      if (!name || !price || stock === "") {
 
-        alert("Please fill in product name, price and stock.");
+      const description =
+        document
+          .getElementById("product-description")
+          .value
+          .trim();
 
+
+      const discountPrice =
+        document
+          .getElementById("product-discount")
+          .value;
+
+
+      const imageUrl =
+        document
+          .getElementById("product-image")
+          .value
+          .trim();
+
+
+      const isActive =
+        document
+          .getElementById("product-status")
+          .value === "true";
+
+
+      const allowBkash =
+        document
+          .getElementById("allow-bkash")
+          .checked;
+
+
+      const allowNagad =
+        document
+          .getElementById("allow-nagad")
+          .checked;
+
+
+      const allowCod =
+        document
+          .getElementById("allow-cod")
+          .checked;
+
+
+      if (!name || price === "" || stock === "") {
+
+        alert(
+          "Please fill in product name, price and stock."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        !allowBkash &&
+        !allowNagad &&
+        !allowCod
+      ) {
+
+        alert(
+          "Please enable at least one payment method."
+        );
+
+        return;
+
+      }
+
+
+      const token = getToken();
+
+
+      if (!token) {
+
+        alert("Admin login required.");
+
+        window.location.href = "../index.html";
+
+        return;
+
+      }
+
+
+      try {
+
+        const response = await fetch(
+          API_URL,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+
+            body: JSON.stringify({
+
+              name: name,
+
+              description:
+                description || null,
+
+              price:
+                Number(price),
+
+              discount_price:
+                discountPrice === ""
+                  ? null
+                  : Number(discountPrice),
+
+              image_url:
+                imageUrl || null,
+
+              stock:
+                Number(stock),
+
+              is_featured:
+                false,
+
+              is_active:
+                isActive,
+
+              allow_bkash:
+                allowBkash,
+
+              allow_nagad:
+                allowNagad,
+
+              allow_cod:
+                allowCod
+
+            })
+          }
+        );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          alert(
+            data.message ||
+            "Could not add product."
+          );
+
+          return;
+
+        }
+
+
+        alert(
+          "Product added successfully!"
+        );
+
+
+        clearForm();
+
+        hideForm();
+
+        loadProducts();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not connect to the server."
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       LOAD PRODUCTS
+    ========================= */
+
+    async function loadProducts() {
+
+      const productsList =
+        document.getElementById("products-list");
+
+
+      const token = getToken();
+
+
+      if (!token) {
+
+        productsList.innerHTML = `
+          <div class="empty">
+            Admin login required.
+          </div>
+        `;
+
+        return;
+
+      }
+
+
+      try {
+
+        const response = await fetch(
+          API_URL,
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          }
+        );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.message ||
+            "Could not load products."
+          );
+
+        }
+
+
+        const products =
+          data.products || [];
+
+
+        if (products.length === 0) {
+
+          productsList.innerHTML = `
+            <div class="empty">
+              🛍️ No products found.
+            </div>
+          `;
+
+          return;
+
+        }
+
+
+        productsList.innerHTML = "";
+
+
+        products.forEach(product => {
+
+          const row =
+            document.createElement("div");
+
+          row.className = "product-row";
+
+
+          const image =
+            product.image_url ||
+            "https://via.placeholder.com/70";
+
+
+          const currentPrice =
+            product.discount_price !== null
+              ? `৳${product.discount_price}`
+              : `৳${product.price}`;
+
+
+          const paymentMethods = [];
+
+
+          if (product.allow_bkash) {
+            paymentMethods.push("bKash");
+          }
+
+          if (product.allow_nagad) {
+            paymentMethods.push("Nagad");
+          }
+
+          if (product.allow_cod) {
+            paymentMethods.push("COD");
+          }
+
+
+          row.innerHTML = `
+
+            <img
+              class="product-image"
+              src="${escapeHtml(image)}"
+              alt="${escapeHtml(product.name)}"
+            >
+
+
+            <div class="product-info">
+
+              <h4>
+                ${escapeHtml(product.name)}
+              </h4>
+
+              <p>
+                Price: ${currentPrice}
+              </p>
+
+              <p>
+                Stock: ${product.stock}
+              </p>
+
+              <p class="payment-status">
+                💳 Payment:
+                ${
+                  paymentMethods.length
+                    ? escapeHtml(
+                        paymentMethods.join(", ")
+                      )
+                    : "None"
+                }
+              </p>
+
+
+              <span
+                class="status ${
+                  product.is_active
+                    ? "active-status"
+                    : "inactive-status"
+                }"
+              >
+                ${
+                  product.is_active
+                    ? "Active"
+                    : "Inactive"
+                }
+              </span>
+
+            </div>
+
+
+            <div class="product-actions">
+
+              <button
+                class="edit-btn"
+                onclick="editProduct(${product.id})"
+              >
+                Edit
+              </button>
+
+              <button
+                class="delete-btn"
+                onclick="deleteProduct(${product.id})"
+              >
+                Delete
+              </button>
+
+            </div>
+
+          `;
+
+
+          productsList.appendChild(row);
+
+        });
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        productsList.innerHTML = `
+          <div class="empty">
+            ❌ Could not load products.
+          </div>
+        `;
+
+      }
+
+    }
+
+
+    /* =========================
+       EDIT PRODUCT
+    ========================= */
+
+    function editProduct(id) {
+
+      alert(
+        "Edit product screen will be connected next."
+      );
+
+    }
+
+
+    /* =========================
+       DELETE PRODUCT
+    ========================= */
+
+    async function deleteProduct(id) {
+
+      const confirmDelete =
+        confirm(
+          "Are you sure you want to remove this product?"
+        );
+
+
+      if (!confirmDelete) {
         return;
       }
 
-      /*
-        Backend API will be connected here.
-      */
 
-      alert(
-        "Product form is ready. Backend connection will be added next."
-      );
+      const token = getToken();
+
+
+      if (!token) {
+
+        alert("Admin login required.");
+
+        return;
+
+      }
+
+
+      try {
+
+        const response = await fetch(
+          `${API_URL}/${id}`,
+          {
+            method: "DELETE",
+
+            headers: {
+              "Authorization":
+                `Bearer ${token}`
+            }
+          }
+        );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          alert(
+            data.message ||
+            "Could not remove product."
+          );
+
+          return;
+
+        }
+
+
+        alert(
+          "Product removed successfully."
+        );
+
+
+        loadProducts();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Could not connect to the server."
+        );
+
+      }
+
     }
 
+
+    /* =========================
+       CLEAR FORM
+    ========================= */
+
+    function clearForm() {
+
+      document.getElementById(
+        "product-name"
+      ).value = "";
+
+
+      document.getElementById(
+        "product-price"
+      ).value = "";
+
+
+      document.getElementById(
+        "product-discount"
+      ).value = "";
+
+
+      document.getElementById(
+        "product-stock"
+      ).value = "";
+
+
+      document.getElementById(
+        "product-image"
+      ).value = "";
+
+
+      document.getElementById(
+        "product-description"
+      ).value = "";
+
+
+      document.getElementById(
+        "product-status"
+      ).value = "true";
+
+
+      document.getElementById(
+        "allow-bkash"
+      ).checked = true;
+
+
+      document.getElementById(
+        "allow-nagad"
+      ).checked = true;
+
+
+      document.getElementById(
+        "allow-cod"
+      ).checked = true;
+
+    }
+
+
+    /* =========================
+       ESCAPE HTML
+    ========================= */
+
+    function escapeHtml(value) {
+
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    }
+
+
+    /* =========================
+       LOGOUT
+    ========================= */
 
     function logout() {
 
       localStorage.removeItem("token");
+
       localStorage.removeItem("authToken");
 
-      window.location.href = "../index.html";
+      window.location.href =
+        "../index.html";
 
     }
+
+
+    /* =========================
+       INITIAL LOAD
+    ========================= */
+
+    loadProducts();
 
   </script>
 
