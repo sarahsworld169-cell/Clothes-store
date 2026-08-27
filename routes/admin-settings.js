@@ -16,7 +16,6 @@ const pool = new Pool({
    CATEGORIES
 ======================================== */
 
-
 /* GET ALL CATEGORIES */
 
 router.get("/categories", async (req, res) => {
@@ -53,7 +52,7 @@ router.post("/categories", adminOnly, async (req, res) => {
       image_url
     } = req.body;
 
-    if (!name) {
+    if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
         message: "Category name is required."
@@ -107,6 +106,13 @@ router.put("/categories/:id", adminOnly, async (req, res) => {
       is_active
     } = req.body;
 
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Category name is required."
+      });
+    }
+
     const result = await pool.query(
       `UPDATE categories
        SET
@@ -117,7 +123,7 @@ router.put("/categories/:id", adminOnly, async (req, res) => {
        WHERE id = $5
        RETURNING *`,
       [
-        name,
+        name.trim(),
         description || null,
         image_url || null,
         is_active !== false,
@@ -140,6 +146,13 @@ router.put("/categories/:id", adminOnly, async (req, res) => {
 
   } catch (error) {
     console.error(error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "This category already exists."
+      });
+    }
 
     res.status(500).json({
       success: false,
@@ -188,7 +201,6 @@ router.delete("/categories/:id", adminOnly, async (req, res) => {
    DELIVERY AREAS
 ======================================== */
 
-
 /* GET DELIVERY AREAS */
 
 router.get("/delivery-areas", async (req, res) => {
@@ -225,17 +237,20 @@ router.post("/delivery-areas", adminOnly, async (req, res) => {
       is_available
     } = req.body;
 
-    if (!area_name || delivery_charge === undefined) {
+    if (!area_name || !area_name.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Area name and delivery charge are required."
+        message: "Area name is required."
       });
     }
 
-    if (Number(delivery_charge) < 0) {
+    if (
+      delivery_charge === undefined ||
+      Number(delivery_charge) < 0
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Delivery charge cannot be negative."
+        message: "Valid delivery charge is required."
       });
     }
 
@@ -285,10 +300,20 @@ router.put("/delivery-areas/:id", adminOnly, async (req, res) => {
       is_available
     } = req.body;
 
-    if (delivery_charge !== undefined && Number(delivery_charge) < 0) {
+    if (!area_name || !area_name.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Delivery charge cannot be negative."
+        message: "Area name is required."
+      });
+    }
+
+    if (
+      delivery_charge === undefined ||
+      Number(delivery_charge) < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid delivery charge is required."
       });
     }
 
@@ -302,7 +327,7 @@ router.put("/delivery-areas/:id", adminOnly, async (req, res) => {
        WHERE id = $4
        RETURNING *`,
       [
-        area_name,
+        area_name.trim(),
         Number(delivery_charge),
         is_available !== false,
         req.params.id
@@ -325,6 +350,13 @@ router.put("/delivery-areas/:id", adminOnly, async (req, res) => {
   } catch (error) {
     console.error(error);
 
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "This delivery area already exists."
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Could not update delivery area."
@@ -339,8 +371,9 @@ router.delete("/delivery-areas/:id", adminOnly, async (req, res) => {
   try {
     const result = await pool.query(
       `UPDATE delivery_areas
-       SET is_available = FALSE,
-           updated_at = CURRENT_TIMESTAMP
+       SET
+         is_available = FALSE,
+         updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING id, area_name`,
       [req.params.id]
@@ -370,23 +403,41 @@ router.delete("/delivery-areas/:id", adminOnly, async (req, res) => {
 
 
 /* ========================================
-   ADMIN DEFAULT SETTINGS
+   ADMIN SETTINGS
 ======================================== */
 
+/*
+  SETTINGS USED BY THE STORE
 
-/* GET SETTINGS */
+  bkash_enabled
+  nagad_enabled
+  cod_enabled
+  payment_number
+  default_delivery_charge
+  default_cancel_reason
+  default_accept_message
+*/
+
+
+/* GET ALL SETTINGS */
 
 router.get("/settings", adminOnly, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT *
+      `SELECT setting_key, setting_value, updated_at
        FROM admin_settings
        ORDER BY setting_key ASC`
     );
 
+    const settings = {};
+
+    for (const row of result.rows) {
+      settings[row.setting_key] = row.setting_value;
+    }
+
     res.json({
       success: true,
-      settings: result.rows
+      settings
     });
 
   } catch (error) {
@@ -400,7 +451,41 @@ router.get("/settings", adminOnly, async (req, res) => {
 });
 
 
-/* UPDATE SETTING */
+/* GET SINGLE SETTING */
+
+router.get("/settings/:key", adminOnly, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT *
+       FROM admin_settings
+       WHERE setting_key = $1`,
+      [req.params.key]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Setting not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      setting: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load setting."
+    });
+  }
+});
+
+
+/* UPDATE SINGLE SETTING */
 
 router.put("/settings/:key", adminOnly, async (req, res) => {
   try {
@@ -415,16 +500,23 @@ router.put("/settings/:key", adminOnly, async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO admin_settings
-       (setting_key, setting_value, updated_at)
-       VALUES ($1, $2, CURRENT_TIMESTAMP)
+       (
+         setting_key,
+         setting_value,
+         updated_at
+       )
+       VALUES
+       ($1, $2, CURRENT_TIMESTAMP)
+
        ON CONFLICT (setting_key)
        DO UPDATE SET
          setting_value = EXCLUDED.setting_value,
          updated_at = CURRENT_TIMESTAMP
+
        RETURNING *`,
       [
         req.params.key,
-        value
+        String(value)
       ]
     );
 
@@ -441,6 +533,77 @@ router.put("/settings/:key", adminOnly, async (req, res) => {
       success: false,
       message: "Could not update setting."
     });
+  }
+});
+
+
+/* UPDATE MULTIPLE SETTINGS */
+
+router.put("/settings", adminOnly, async (req, res) => {
+
+  const client = await pool.connect();
+
+  try {
+
+    const settings = req.body;
+
+    if (
+      !settings ||
+      typeof settings !== "object" ||
+      Array.isArray(settings)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Settings object is required."
+      });
+    }
+
+    await client.query("BEGIN");
+
+    for (const [key, value] of Object.entries(settings)) {
+
+      await client.query(
+        `INSERT INTO admin_settings
+         (
+           setting_key,
+           setting_value,
+           updated_at
+         )
+         VALUES
+         ($1, $2, CURRENT_TIMESTAMP)
+
+         ON CONFLICT (setting_key)
+         DO UPDATE SET
+           setting_value = EXCLUDED.setting_value,
+           updated_at = CURRENT_TIMESTAMP`,
+        [
+          key,
+          String(value)
+        ]
+      );
+
+    }
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "All settings saved successfully."
+    });
+
+  } catch (error) {
+
+    await client.query("ROLLBACK");
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not save settings."
+    });
+
+  } finally {
+    client.release();
   }
 });
 
