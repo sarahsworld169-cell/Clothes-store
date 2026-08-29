@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const { Pool } = require("pg");
 
 const authRoutes = require("./routes/auth");
@@ -91,6 +92,23 @@ app.use(
 
 
 /* =========================
+   FRONTEND FILES
+========================= */
+
+app.use(express.static(__dirname));
+
+
+/* =========================
+   ADMIN FRONTEND
+========================= */
+
+app.use(
+  "/admin",
+  express.static(path.join(__dirname, "admin"))
+);
+
+
+/* =========================
    HEALTH CHECK
 ========================= */
 
@@ -124,10 +142,22 @@ app.get("/api/health", async (req, res) => {
 
 app.get("/", (req, res) => {
 
-  res.json({
-    success: true,
-    message: "Welcome to Sarah's World API 🚀"
-  });
+  res.sendFile(
+    path.join(__dirname, "index.html")
+  );
+
+});
+
+
+/* =========================
+   ADMIN HOME
+========================= */
+
+app.get("/admin", (req, res) => {
+
+  res.sendFile(
+    path.join(__dirname, "admin", "index.html")
+  );
 
 });
 
