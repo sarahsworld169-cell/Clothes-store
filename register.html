@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sarah's World | Create Account</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f7f7f7;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 34px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      font-size: 17px;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #111;
+    }
+
+    .register-btn {
+      width: 100%;
+      border: none;
+      background: #111;
+      color: white;
+      padding: 14px;
+      border-radius: 7px;
+      font-size: 17px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .register-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 7px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .message.success {
+      display: block;
+      background: #e8f7e8;
+      color: #187a18;
+    }
+
+    .message.error {
+      display: block;
+      background: #ffe8e8;
+      color: #c00000;
+    }
+
+    .links {
+      text-align: center;
+      margin-top: 22px;
+      line-height: 2;
+    }
+
+    .links a {
+      color: #111;
+      text-decoration: none;
+    }
+
+    .links a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 22px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Sarah's World</h1>
+
+    <p class="subtitle">
+      Create your account
+    </p>
+
+    <form id="registerForm">
+
+      <div class="form-group">
+        <label for="name">Name</label>
+
+        <input
+          type="text"
+          id="name"
+          placeholder="Enter your name"
+          required
+        >
+      </div>
+
+
+      <div class="form-group">
+        <label for="email">Email</label>
+
+        <input
+          type="email"
+          id="email"
+          placeholder="Enter your email"
+          required
+        >
+      </div>
+
+
+      <div class="form-group">
+        <label for="phone">Phone</label>
+
+        <input
+          type="tel"
+          id="phone"
+          placeholder="Enter your phone number"
+        >
+      </div>
+
+
+      <div class="form-group">
+        <label for="password">Password</label>
+
+        <input
+          type="password"
+          id="password"
+          placeholder="Minimum 8 characters"
+          minlength="8"
+          required
+        >
+      </div>
+
+
+      <div class="form-group">
+        <label for="confirmPassword">
+          Confirm Password
+        </label>
+
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Re-enter your password"
+          minlength="8"
+          required
+        >
+      </div>
+
+
+      <button
+        type="submit"
+        class="register-btn"
+        id="registerBtn"
+      >
+        Create Account
+      </button>
+
+    </form>
+
+
+    <div id="message" class="message"></div>
+
+
+    <div class="links">
+
+      <a href="/login.html">
+        Already have an account? Login
+      </a>
+
+      <br>
+
+      <a href="/">
+        ← Back to Store
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    const form =
+      document.getElementById("registerForm");
+
+    const message =
+      document.getElementById("message");
+
+    const registerBtn =
+      document.getElementById("registerBtn");
+
+
+    form.addEventListener("submit", async function(event) {
+
+      event.preventDefault();
+
+      message.className = "message";
+      message.textContent = "";
+
+      const name =
+        document.getElementById("name").value.trim();
+
+      const email =
+        document.getElementById("email").value.trim();
+
+      const phone =
+        document.getElementById("phone").value.trim();
+
+      const password =
+        document.getElementById("password").value;
+
+      const confirmPassword =
+        document.getElementById("confirmPassword").value;
+
+
+      /* =========================
+         VALIDATION
+      ========================= */
+
+      if (password.length < 8) {
+
+        message.className = "message error";
+        message.textContent =
+          "Password must be at least 8 characters.";
+
+        return;
+      }
+
+
+      if (password !== confirmPassword) {
+
+        message.className = "message error";
+        message.textContent =
+          "Passwords do not match.";
+
+        return;
+      }
+
+
+      /* =========================
+         REGISTER
+      ========================= */
+
+      registerBtn.disabled = true;
+      registerBtn.textContent = "Creating Account...";
+
+
+      try {
+
+        const response =
+          await fetch("/api/auth/register", {
+
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              name,
+              email,
+              password,
+              phone: phone || null
+            })
+
+          });
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+          throw new Error(
+            data.message || "Registration failed."
+          );
+
+        }
+
+
+        /* =========================
+           SAVE LOGIN
+        ========================= */
+
+        if (data.token) {
+
+          localStorage.setItem(
+            "token",
+            data.token
+          );
+
+        }
+
+
+        if (data.user) {
+
+          localStorage.setItem(
+            "user",
+            JSON.stringify(data.user)
+          );
+
+        }
+
+
+        message.className =
+          "message success";
+
+        message.textContent =
+          "Account created successfully! Redirecting...";
+
+
+        setTimeout(() => {
+
+          window.location.href =
+            "/login.html";
+
+        }, 1200);
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        message.className =
+          "message error";
+
+        message.textContent =
+          error.message ||
+          "Could not create account.";
+
+        registerBtn.disabled = false;
+        registerBtn.textContent =
+          "Create Account";
+
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>
